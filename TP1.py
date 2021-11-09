@@ -26,16 +26,19 @@ Xs_test = (Xs_test - means) / stds
 
 def test_error(predictions, Ys):
     cmp_predict = Ys == predictions
-    test_error = (len(Ys) - np.sum(cmp_predict)) / len(Ys)
+    test_error = (len(cmp_predict) - np.sum(cmp_predict)) / len(cmp_predict)
     return test_error
 
 nb_kde = NaiveBayesKde()
-best_bw, best_valid_err = nb_kde.fit(Xs_train, Ys_train, 5, 0.02, 0.61, 0.02)
+best_bw, best_valid_err = nb_kde.optimize_bandwidth(Xs_train, Ys_train, 5, 0.02, 0.61, 0.02)
 
 print("Best bandwidth is", best_bw, "with validation error", best_valid_err)
 
+nb_kde.fit(Xs_train, Ys_train)
 nb_kde_pred = nb_kde.predict(Xs_test)
 nb_kde_test_err = test_error(nb_kde_pred, Ys_test)
+
+nb_kde.plot_errors()
 
 print("Naive Bayes w/ KDE - Test Error:", nb_kde_test_err)
 
