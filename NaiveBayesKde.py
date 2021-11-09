@@ -81,8 +81,3 @@ class NaiveBayesKde:
 
         predictions = np.argmax([c_test_0, c_test_1], axis=0)
         return predictions
-
-    def test_error(self, predictions, Ys):
-        cmp_predict = Ys == predictions
-        test_error = (len(Ys) - np.sum(cmp_predict)) / len(Ys)
-        return test_error
