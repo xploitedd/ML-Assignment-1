@@ -14,8 +14,8 @@ class NaiveBayesKde:
         kde = KernelDensity(bandwidth=bw).fit(fit_x)
         return kde.score_samples(train_x), kde.score_samples(valid_x)
 
-    def _kde(self, fit_x, test_x):
-        kde = KernelDensity(bandwidth=self.best_bw).fit(fit_x)
+    def _kde(self, fit_x, test_x, bw):
+        kde = KernelDensity(bandwidth=bw).fit(fit_x)
         return kde.score_samples(test_x)
 
     def _kde_calc_fold(self, Xs, Ys, tr_ix, va_ix, bw):
@@ -51,15 +51,15 @@ class NaiveBayesKde:
 
         return train_err, valid_err
 
-    def optimize_bandwidth(self, Xs, Ys, folds, start_bw, end_bw, step_bw):
+    def optimize_bandwidth(self, X_r, Y_r, folds, start_bw, end_bw, step_bw):
         kfold = StratifiedKFold(n_splits=folds)
         best_bw = 0
         best_valid_err = 1
 
         for bw in np.arange(start_bw, end_bw, step_bw):
             train_err = valid_err = 0
-            for tr_ix, va_ix in kfold.split(Ys, Ys):
-                tr_err, va_err = self._kde_calc_fold(Xs, Ys, tr_ix, va_ix, bw)
+            for tr_ix, va_ix in kfold.split(Y_r, Y_r):
+                tr_err, va_err = self._kde_calc_fold(X_r, Y_r, tr_ix, va_ix, bw)
                 train_err += tr_err / folds
                 valid_err += va_err / folds
 
@@ -73,30 +73,29 @@ class NaiveBayesKde:
 
         return self.best_bw, self.best_valid_err
 
-    def fit(self, Xs, Ys):
+    def fit(self, X_r, Y_r):
         if self.best_bw == 0:
             raise Exception('The bandwidth should be optimized first')
 
-        self._p_c1 = np.sum(Ys) / len(Ys)
-        self._p_c0 = 1 - self._p_c1
+        self._p_c0 = np.log(np.sum(Y_r == 0) / len(Y_r))
+        self._p_c1 = np.log(np.sum(Y_r == 1) / len(Y_r))
 
-        self._x_c0 = Xs[Ys == 0]
-        self._x_c1 = Xs[Ys == 1]
+        self._x_c0 = X_r[Y_r == 0]
+        self._x_c1 = X_r[Y_r == 1]
         self._trained = True
-        return
         
-    def predict(self, Xs):
+    def predict(self, X_t, bw):
         if self._trained == False:
             raise Exception('The classifier is not trained')
 
         c_test_0 = self._p_c0
         c_test_1 = self._p_c1
 
-        for feat in range(0, Xs.shape[1]):
-            test_dens = self._kde(self._x_c0[:,[feat]], Xs[:,[feat]])
+        for feat in range(0, X_t.shape[1]):
+            test_dens = self._kde(self._x_c0[:,[feat]], X_t[:,[feat]], bw)
             c_test_0 += test_dens
 
-            test_dens = self._kde(self._x_c1[:,[feat]], Xs[:,[feat]])
+            test_dens = self._kde(self._x_c1[:,[feat]], X_t[:,[feat]], bw)
             c_test_1 += test_dens
 
         predictions = np.argmax([c_test_0, c_test_1], axis=0)
