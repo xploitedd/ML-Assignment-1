@@ -56,7 +56,7 @@ class NaiveBayesKde:
         best_bw = 0
         best_valid_err = 1
 
-        for bw in np.arange(start_bw, end_bw, step_bw):
+        for bw in np.arange(start_bw, end_bw + step_bw, step_bw):
             train_err = valid_err = 0
             for tr_ix, va_ix in kfold.split(Y_r, Y_r):
                 tr_err, va_err = self._kde_calc_fold(X_r, Y_r, tr_ix, va_ix, bw)
@@ -109,9 +109,9 @@ class NaiveBayesKde:
         plt.plot(errors[:,0], errors[:,1], 'b', label='Training Error')
         plt.plot(errors[:,0], errors[:,2], 'r', label='Cross-Validation Error')
         plt.legend()
-        plt.show()
-
+        
         if save_fig:
             plt.savefig(fig_name)
 
+        plt.show()
         return
