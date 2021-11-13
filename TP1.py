@@ -4,6 +4,7 @@ from SvmClassifier import SvmClassifier
 from sklearn.utils import shuffle
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
+from Util import mcnemar_test, normal_test
 
 train_data = np.loadtxt('TP1_train.tsv', delimiter='\t')
 train_data = shuffle(train_data)
@@ -25,7 +26,7 @@ Xs_test = (Xs_test - means) / stds
 
 ### Naive Bayes with Kernel Density Estimation ####
 
-print("Optimizing Naive Bayes w/ KDE parameters...")
+print("Optimizing KDE parameters...")
 
 nb_kde = NaiveBayesKde()
 nb_bw, nb_valid_err = nb_kde.optimize_bandwidth(Xs_train, Ys_train, 5, 0.02, 0.6, 0.02)
@@ -46,6 +47,8 @@ nb_gaussian_test_err = 1 - nb_gaussian.score(Xs_test, Ys_test)
 
 print("\nNaive Bayes w/ Gaussian - Test Error:", nb_gaussian_test_err)
 
+#### Support Vector Machine classifier with the Radial Basis Function kernel ####
+
 print("\nOptimizing SVM parameters...")
 
 svc = SvmClassifier()
@@ -56,9 +59,30 @@ print("SVM - Best Gamma:", svc_g)
 print("SVM - Best validation error:", svc_valid_err)
 
 svc.fit(Xs_train, Ys_train, svc_g, svc_c)
+svc_pred = svc.predict(Xs_test)
 svc_test_err = 1 - svc.score(Xs_test, Ys_test)
 
 print("SVM - Test Error:", svc_test_err)
+
+#### Classifier comparison ####
+
+nb_kde_errors, nb_kde_ntest = normal_test(Ys_test, nb_kde_pred)
+nb_gaussian_errors, nb_gaussian_ntest = normal_test(Ys_test, nb_gaussian_pred)
+svc_errors, svc_ntest = normal_test(Ys_test, svc_pred)
+
+print("\n---- Normal Test ----")
+print("Naive Bayes with KDE:\t\t", nb_kde_errors, "+-", nb_kde_ntest)
+print("Naive Bayes with Gaussian:\t", nb_gaussian_errors, "+-", nb_gaussian_ntest)
+print("Naive Bayes with SVM:\t\t", svc_errors, "+-", svc_ntest)
+
+nb_kde_vs_nb_gaussian = mcnemar_test(Ys_test, nb_kde_pred, nb_gaussian_pred)
+nb_kde_vs_svc = mcnemar_test(Ys_test, nb_kde_pred, svc_pred) 
+nb_gaussian_vs_svc = mcnemar_test(Ys_test, nb_gaussian_pred, svc_pred)
+
+print("\n---- McNemar's Test ----")
+print("Naive Bayes with KDE vs Naive Bayes with Gaussian:\t", nb_kde_vs_nb_gaussian)
+print("Naive Bayes with KDE vs Support Vector Machine:\t\t", nb_kde_vs_svc)
+print("Naive Bayes with Gaussian vs Support Vector Machine:\t", nb_gaussian_vs_svc)
 
 nb_kde.plot_errors()
 svc.plot_errors()
