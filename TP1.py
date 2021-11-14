@@ -54,15 +54,15 @@ print("\nOptimizing SVM parameters...")
 svc = SvmClassifier()
 svc_c, svc_g, svc_valid_err = svc.optimize_parameters(Xs_train, Ys_train, 5, [0.2, 6, 0.2], [1, 1000, 100])
 
-print("SVM - Best C:", svc_c)
-print("SVM - Best Gamma:", svc_g)
+print("SVM - Best C:               ", svc_c)
+print("SVM - Best Gamma:           ", svc_g)
 print("SVM - Best validation error:", svc_valid_err)
 
 svc.fit(Xs_train, Ys_train, svc_g, svc_c)
 svc_pred = svc.predict(Xs_test)
 svc_test_err = 1 - svc.score(Xs_test, Ys_test)
 
-print("SVM - Test Error:", svc_test_err)
+print("SVM - Test Error:           ", svc_test_err)
 
 #### Classifier comparison ####
 
@@ -71,18 +71,18 @@ nb_gaussian_errors, nb_gaussian_ntest = normal_test(Ys_test, nb_gaussian_pred)
 svc_errors, svc_ntest = normal_test(Ys_test, svc_pred)
 
 print("\n---- Normal Test ----")
-print("Naive Bayes with KDE:\t\t", nb_kde_errors, "+-", nb_kde_ntest)
-print("Naive Bayes with Gaussian:\t", nb_gaussian_errors, "+-", nb_gaussian_ntest)
-print("Naive Bayes with SVM:\t\t", svc_errors, "+-", svc_ntest)
+print("Naive Bayes with KDE:     ", nb_kde_errors, "+-", nb_kde_ntest)
+print("Naive Bayes with Gaussian:", nb_gaussian_errors, "+-", nb_gaussian_ntest)
+print("SVM:                      ", svc_errors, "+-", svc_ntest)
 
 nb_kde_vs_nb_gaussian = mcnemar_test(Ys_test, nb_kde_pred, nb_gaussian_pred)
 nb_kde_vs_svc = mcnemar_test(Ys_test, nb_kde_pred, svc_pred) 
 nb_gaussian_vs_svc = mcnemar_test(Ys_test, nb_gaussian_pred, svc_pred)
 
 print("\n---- McNemar's Test ----")
-print("Naive Bayes with KDE vs Naive Bayes with Gaussian:\t", nb_kde_vs_nb_gaussian)
-print("Naive Bayes with KDE vs Support Vector Machine:\t\t", nb_kde_vs_svc)
-print("Naive Bayes with Gaussian vs Support Vector Machine:\t", nb_gaussian_vs_svc)
+print("Naive Bayes with KDE vs Naive Bayes with Gaussian:  ", nb_kde_vs_nb_gaussian)
+print("Naive Bayes with KDE vs Support Vector Machine:     ", nb_kde_vs_svc)
+print("Naive Bayes with Gaussian vs Support Vector Machine:", nb_gaussian_vs_svc)
 
 nb_kde.plot_errors()
 svc.plot_errors()

@@ -5,8 +5,9 @@ from sklearn.svm import SVC
 
 class SvmClassifier:
     def __init__(self):
-        self._errors = []
+        self._errors = {}
         self._svc = None
+        self._best_c = 1
 
     def _svc_err(self, X_r, Y_r, tr_ix, va_ix, c, gamma):
         svc = SVC(kernel='rbf', C=c, gamma=gamma)
@@ -17,16 +18,17 @@ class SvmClassifier:
 
         return train_err, valid_err
 
-    def optimize_parameters(self, X_r, Y_r, folds, g_range, c_range):
+    def optimize_parameters(self, X_r, Y_r, folds, g_range, c_range = [1, 1, 1]):
         kfold = StratifiedKFold(n_splits=folds)
 
         best_c = best_gamma = 0
         best_valid_err = 1
 
         for gamma in np.arange(g_range[0], g_range[1] + g_range[2], g_range[2]):
-            bg_t_err = bg_v_err = 1
-
             for c in np.arange(c_range[0], c_range[1] + c_range[2], c_range[2]):
+                if (c not in self._errors):
+                    self._errors[c] = []
+                
                 train_err = valid_err = 0
 
                 for tr_ix, va_ix in kfold.split(Y_r, Y_r):
@@ -39,11 +41,9 @@ class SvmClassifier:
                     best_c = c
                     best_gamma = gamma
 
-                if (valid_err < bg_v_err):
-                    bg_v_err = valid_err
-                    bg_t_err = train_err
+                self._errors[c].append([gamma, train_err, valid_err])
 
-            self._errors.append([gamma, bg_t_err, bg_v_err])
+        self._best_c = best_c
 
         return best_c, best_gamma, best_valid_err
 
@@ -64,10 +64,10 @@ class SvmClassifier:
         return self._svc.score(X_t, Y_t)
 
     def plot_errors(self, save_fig=True, fig_name='SVM.png'):
-        errors = np.array(self._errors)
+        errors = np.array(self._errors[self._best_c])   
 
         plt.figure()
-        plt.title('Training vs Cross Validation Errors')
+        plt.title(f'Training vs Cross Validation Errors (C={self._best_c})')
         plt.plot(errors[:,0], errors[:,1], 'b', label='Training Error')
         plt.plot(errors[:,0], errors[:,2], 'r', label='Cross-Validation Error')
         plt.legend()
