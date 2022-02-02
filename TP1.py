@@ -19,7 +19,7 @@ Ys_test = test_data[:,-1]
 
 # standardize the data
 stds = np.std(Xs_train, axis=0)
-means = np.std(Xs_train, axis=0)
+means = np.mean(Xs_train, axis=0)
 
 Xs_train = (Xs_train - means) / stds
 Xs_test = (Xs_test - means) / stds
